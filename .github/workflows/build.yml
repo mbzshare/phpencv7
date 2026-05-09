@@ -4,8 +4,9 @@ on: [push, pull_request]
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: windows-2019 # 关键修改：使用旧版服务器以匹配 VC15 编译器
     strategy:
+      fail-fast: false
       matrix:
         php-version: ["7.4"]
         arch: [x64, x86]
