@@ -1,0 +1,44 @@
+name: Build tonyenc for PHP 7.4
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        php-version: ["7.4"]
+        arch: [x64, x86]
+        ts: [nts, ts]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP SDK
+        id: setup-php-sdk
+        uses: php/setup-php-sdk@v0.12
+        with:
+          version: ${{ matrix.php-version }}
+          arch: ${{ matrix.arch }}
+          ts: ${{ matrix.ts }}
+
+      - name: Setup MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          toolset: ${{ steps.setup-php-sdk.outputs.toolset }}
+
+      - name: Build Extension
+        shell: cmd
+        run: |
+          buildconf
+          configure --enable-tonyenc=shared
+          nmake
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: php_tonyenc-7.4-${{ matrix.arch }}-${{ matrix.ts }}
+          path: |
+            x64/Release*/php_tonyenc.dll
+            Release*/php_tonyenc.dll
