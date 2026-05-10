@@ -4,7 +4,7 @@ on: [push, pull_request]
 
 jobs:
   build:
-    runs-on: windows-2019 # 关键修改：使用旧版服务器以匹配 VC15 编译器
+    runs-on: windows-2022
     strategy:
       fail-fast: false
       matrix:
