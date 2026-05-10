@@ -1,45 +1,53 @@
 name: Build tonyenc for PHP 7.4
 
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
 
 jobs:
   build:
-    runs-on: windows-2022
     strategy:
       fail-fast: false
       matrix:
-        php-version: ["7.4"]
-        arch: [x64, x86]
-        ts: [nts, ts]
+        include:
+          - php-version: "7.4"
+            arch: x64
+            ts: nts
+            os: windows-2019
+          - php-version: "7.4"
+            arch: x64
+            ts: ts
+            os: windows-2019
+          - php-version: "7.4"
+            arch: x86
+            ts: nts
+            os: windows-2019
+          - php-version: "7.4"
+            arch: x86
+            ts: ts
+            os: windows-2019
+
+    runs-on: ${{ matrix.os }}
 
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup PHP SDK
-        id: setup-php-sdk
-        uses: php/setup-php-sdk@v0.12
+      - name: Build extension
+        uses: php/php-windows-builder/extension@v1
         with:
-          version: ${{ matrix.php-version }}
+          php-version: ${{ matrix.php-version }}
           arch: ${{ matrix.arch }}
           ts: ${{ matrix.ts }}
 
-      - name: Setup MSVC
-        uses: ilammy/msvc-dev-cmd@v1
-        with:
-          toolset: ${{ steps.setup-php-sdk.outputs.toolset }}
+      - name: Show built files
+        shell: pwsh
+        run: Get-ChildItem -Path . -Recurse -Filter php_tonyenc.dll | Select-Object FullName
 
-      - name: Build Extension
-        shell: cmd
-        run: |
-          buildconf
-          configure --enable-tonyenc=shared
-          nmake
-
-      - name: Upload Artifacts
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: php_tonyenc-7.4-${{ matrix.arch }}-${{ matrix.ts }}
+          name: php_tonyenc-${{ matrix.php-version }}-${{ matrix.arch }}-${{ matrix.ts }}
           path: |
-            x64/Release*/php_tonyenc.dll
-            Release*/php_tonyenc.dll
+            **/php_tonyenc.dll
+          if-no-files-found: error
